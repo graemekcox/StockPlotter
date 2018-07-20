@@ -5,7 +5,7 @@ import pandas as pd
 pd.core.common.is_list_like = pd.api.types.is_list_like
 import pandas_datareader.data as web
 
-# style.use('ggplot')
+style.use('ggplot')
 
 # start = dt.datetime(2015,1,1)
 # end = dt.datetime.now()
@@ -37,14 +37,19 @@ import pandas_datareader.data as web
 
 def printTickerHead(ticker):
 
+
 	start = dt.datetime(2010,1,1)
 	end   = dt.datetime.now()
 
-	tickers = ['AAPL','MSFT']
+	# tickers = ['AAPL','MSFT']
 
 	df = web.DataReader('AAPL','morningstar',start,end)
+	df.reset_index(inplace=True)
+	# print(df.head())
+	df['Close'].plot() #Plot closing prices
+	plt.show()
 
-	print(df.head())
+	
 
 if __name__ == "__main__":
 # ticker= input("Enter ticker:")
