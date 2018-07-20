@@ -4,6 +4,8 @@ from matplotlib import style
 import pandas as pd 
 pd.core.common.is_list_like = pd.api.types.is_list_like
 import pandas_datareader.data as web
+import matplotlib.dates as mdates
+from mpl_finance import candlestick_ohlc 
 
 style.use('ggplot')
 
@@ -45,42 +47,48 @@ def plotTicker(ticker):
 
 	df = web.DataReader('AAPL','morningstar',start,end)
 	df.reset_index(inplace=True)
+	df.set_index("Date", inplace=True)
+	df.drop("Symbol", axis=1)
 
-	dates = df['Date']
-	closes = df['Close']
+	df['100ma'] = df['Close'].rolling(window=100, min_periods=0).mean()
+	ax1 = plt.subplot2grid((6,1), (0,0), rowspan=5, colspan=1)
+	ax2 = plt.subplot2grid((6,1), (5,0), rowspan=1, colspan=1, sharex=ax1)
+
+	ax1.plot(df.index, df['Close'])
+	ax1.plot(df.index, df['100ma'])
+	#Plot bar graph with volume
+	ax2.bar(df.index, df['Volume'])
 
 	## Now plot everything
 	# df['Close'].plot() #Plot closing prices
-	plt.plot(dates,closes)
+	# plt.plot(dates,closes)
 	plt.show()
 
-def compareTickers(ticker1, ticker2):
+def candlestickPlot(ticker):
 
-
-	start = dt.datetime(2010,1,1)
+	start = dt.datetime(2013,1,1)
 	end   = dt.datetime.now()
 
 
-	df_1 = web.DataReader(ticker1,'morningstar',start, end)
-	df_2 = web.DataReader(ticker2,'morningstar',start, end)
-
-	df_1.reset_index(inplace=True)
-	df_2.reset_index(inplace=True)
+	df = web.DataReader(ticker,'morningstar',start, end)
+	df.reset_index(inplace=True)
 	
-	dates_1 = df_1['Date']
-	dates_2 = df_2['Close']
-	close_1 = df_1['Close']
-	close_2 = df_2['Close']
+	# dates_1 = df_1['Date']
+	df['mdate'] = [mdates.date2num(d) for d in df['Date']]
 
-	plt.plot(dates_1, close_1, 'b')
-	# plt.plot(dates_2, close_2, 'g')
-	# plt.plot(dates_2, close_2)
-
+	ohlc = df[['mdate','Open','High','Low','Close']]
+	ax1 = plt.subplot2grid((6,1), (0,0), rowspan=5, colspan=1)
+	ax2 = plt.subplot2grid((6,1), (5,0), rowspan=5, colspan=1, sharex=ax1)
+	candlestick_ohlc(ax1, ohlc.values, width=0.05, colorup='g', colordown='r')
+	ax2.bar(df['mdate'], df['Volume'])
+	ax2.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+	plt.xticks(rotation=60)
 	plt.show()
+
 
 
 
 if __name__ == "__main__":
 # ticker= input("Enter ticker:")
-	# plotTicker('AAPL')
-	compareTickers('AAPL','MSFT')
+	plotTicker('AAPL')
+	# candlestickPlot('AAPL')
